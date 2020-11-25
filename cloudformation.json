@@ -1,0 +1,137 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "",
+  "Resources": {
+    "CompanyDashboardQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "QueueName": "company-dashboard"
+      }
+    },
+    "CompanyDashboardBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "company-dashboard-some-prefix"
+      }
+    },
+    "CompanyDashbaordTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "TopicName": "company-dashboard"
+      }
+    },
+    "CompanyDashboard": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "noteId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "noteId",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "1",
+          "WriteCapacityUnits": "1"
+        },
+        "TableName": "company-dashboard"
+      }
+    },
+    "NoteAnalysisRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "NoteAnalysisRole",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "AWSLambdaBasicExecutionRole",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "AmazonSQSFullAccess",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "sqs:*",
+                  "Resource": "*"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "ComprehendFullAccess",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "comprehend:*",
+                    "s3:ListAllMyBuckets",
+                    "s3:ListBucket",
+                    "s3:GetBucketLocation",
+                    "iam:ListRoles",
+                    "iam:GetRole"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "NoteAnalysisFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": "note-analysis-function",
+        "Handler": "dev.jozefowicz.companydashboard.function.NoteAnalysisHandler::handleRequest",
+        "Role": {
+          "Fn::GetAtt": [
+            "NoteAnalysisRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "java11",
+        "Timeout": 300,
+        "Code": "TODO"
+      }
+    }
+  }
+}
