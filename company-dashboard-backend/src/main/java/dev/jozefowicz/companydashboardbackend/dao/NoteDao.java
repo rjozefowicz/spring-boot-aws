@@ -1,42 +1,41 @@
 package dev.jozefowicz.companydashboardbackend.dao;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import dev.jozefowicz.companydashboardbackend.domain.Note;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class NoteDao {
 
-    private final AmazonDynamoDB dynamoDB;
-    private final DynamoDBMapper mapper;
+    private final DynamoDbTable<Note> table;
 
-    public NoteDao(AmazonDynamoDB dynamoDB, @Value("${notes-table}") String tableName) {
-        this.dynamoDB = dynamoDB;
-        DynamoDBMapperConfig mapperConfig = new DynamoDBMapperConfig.Builder().withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.withTableNameReplacement(tableName))
-                .build();
-        this.mapper = new DynamoDBMapper(dynamoDB, mapperConfig);
+    public NoteDao(@Autowired DynamoDbEnhancedClient client, @Value("${notes-table}") String tableName) {
+        this.table =
+                client.table(tableName, TableSchema.fromBean(Note.class));
     }
 
     public void persist(final Note note) {
-        mapper.save(note);
+        table.putItem(note);
     }
 
     public void delete(String noteId) {
-        mapper.delete(findByNoteId(noteId));
+        table.deleteItem(Key.builder().partitionValue(noteId).build());
     }
 
     public Note findByNoteId(String noteId) {
-        return mapper.load(Note.class, noteId);
+        return table.getItem(Key.builder().partitionValue(noteId).build());
     }
 
     public List<Note> findAll() {
-        return mapper.scan(Note.class, new DynamoDBScanExpression());
+        return table.scan().items().stream().collect(Collectors.toList());
     }
 
 }
