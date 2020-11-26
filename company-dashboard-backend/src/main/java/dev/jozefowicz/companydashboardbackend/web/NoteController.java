@@ -1,6 +1,5 @@
 package dev.jozefowicz.companydashboardbackend.web;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.jozefowicz.companydashboardbackend.domain.Note;
 import dev.jozefowicz.companydashboardbackend.service.NoteService;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -26,7 +25,7 @@ public class NoteController {
 
     @CrossOrigin(origins = "*")
     @PostMapping
-    public void add(@RequestBody  Note note) throws JsonProcessingException {
+    public void add(@RequestBody Note note) {
         noteService.add(note);
     }
 

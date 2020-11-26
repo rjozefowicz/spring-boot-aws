@@ -2,7 +2,6 @@ package dev.jozefowicz.companydashboardbackend.configuration;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,11 +41,8 @@ public class AwsConfiguration {
     }
 
     @Bean
-    public DynamoDB dynamodb() {
-        AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().withRegion(region).build();
-        return new DynamoDB(client);
+    public AmazonDynamoDB amazonDynamoDB() {
+        return AmazonDynamoDBClientBuilder.standard().withRegion(region).build();
     }
-
-
 
 }

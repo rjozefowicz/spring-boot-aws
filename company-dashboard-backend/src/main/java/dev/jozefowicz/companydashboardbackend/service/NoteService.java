@@ -1,8 +1,8 @@
 package dev.jozefowicz.companydashboardbackend.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import dev.jozefowicz.companydashboardbackend.dao.NoteDao;
 import dev.jozefowicz.companydashboardbackend.domain.Note;
+import dev.jozefowicz.companydashboardbackend.dao.NoteDao;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,14 +14,12 @@ public class NoteService {
     private final NoteDao noteDao;
     private final NoteAnalysisService noteAnalysisService;
 
-
-
     public NoteService(NoteDao noteDao, NoteAnalysisService noteAnalysisService) {
         this.noteDao = noteDao;
         this.noteAnalysisService = noteAnalysisService;
     }
 
-    public void add(final Note note) throws JsonProcessingException {
+    public void add(final Note note) {
         note.setNoteId(UUID.randomUUID().toString());
         note.setTimestamp(System.currentTimeMillis());
         noteDao.persist(note);
