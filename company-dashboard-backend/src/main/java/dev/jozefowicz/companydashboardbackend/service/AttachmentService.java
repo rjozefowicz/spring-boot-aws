@@ -1,6 +1,7 @@
 package dev.jozefowicz.companydashboardbackend.service;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import dev.jozefowicz.companydashboardbackend.domain.Attachment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,19 +28,19 @@ import java.util.stream.Collectors;
 public class AttachmentService {
 
     private final ResourceLoader resourceLoader;
+    private final ApplicationContext applicationContext;
+    private final AmazonS3 amazonS3;
 
     @Value("${attachment.bucket-name}")
     private String bucketName;
 
     private ResourcePatternResolver resourcePatternResolver;
 
-    @Autowired
-    public void setupResolver(ApplicationContext applicationContext, AmazonS3 amazonS3){
-        this.resourcePatternResolver = new PathMatchingSimpleStorageResourcePatternResolver(amazonS3, applicationContext);
-    }
-
-    public AttachmentService(ResourceLoader resourceLoader) {
+    public AttachmentService(ResourceLoader resourceLoader, ApplicationContext applicationContext, AmazonS3 amazonS3) {
         this.resourceLoader = resourceLoader;
+        this.applicationContext = applicationContext;
+        this.amazonS3 = amazonS3;
+        this.resourcePatternResolver = new PathMatchingSimpleStorageResourcePatternResolver(amazonS3, applicationContext);
     }
 
     public List<Attachment> listAll() throws IOException {
@@ -78,5 +79,11 @@ public class AttachmentService {
         try (OutputStream outputStream = writableResource.getOutputStream()) {
             outputStream.write(file);
         }
+    }
+
+    public void delete(final String id) throws IOException {
+        getById(id).ifPresent(attachment -> {
+            amazonS3.deleteObject(new DeleteObjectRequest(bucketName, String.format("%s/%s", id, attachment.getFileName())));
+        });
     }
 }
