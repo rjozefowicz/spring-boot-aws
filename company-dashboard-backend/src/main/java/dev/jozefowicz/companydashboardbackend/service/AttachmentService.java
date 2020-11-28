@@ -1,61 +1,25 @@
 package dev.jozefowicz.companydashboardbackend.service;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import dev.jozefowicz.companydashboardbackend.domain.Attachment;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.aws.core.io.s3.PathMatchingSimpleStorageResourcePatternResolver;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.WritableResource;
-import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class AttachmentService {
 
-    private final ResourceLoader resourceLoader;
-    private final ApplicationContext applicationContext;
-    private final AmazonS3 amazonS3;
-
-    @Value("${attachment.bucket-name}")
-    private String bucketName;
-
-    private ResourcePatternResolver resourcePatternResolver;
-
-    public AttachmentService(ResourceLoader resourceLoader, ApplicationContext applicationContext, AmazonS3 amazonS3) {
-        this.resourceLoader = resourceLoader;
-        this.applicationContext = applicationContext;
-        this.amazonS3 = amazonS3;
-        this.resourcePatternResolver = new PathMatchingSimpleStorageResourcePatternResolver(amazonS3, applicationContext);
+    public List<Attachment> listAll() {
+        return Collections.emptyList();
     }
 
-    public List<Attachment> listAll() throws IOException {
-        final Resource[] resources = resourcePatternResolver.getResources(String.format("s3://%s/**/*", bucketName));
-        return Arrays.asList(resources)
-                .stream()
-                .map(this::mapToAttachment)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-    }
-
-    public Optional<Attachment> getById(final String id) throws IOException {
-        Resource[] resources = resourcePatternResolver.getResources(String.format("s3://%s/%s/*", bucketName, id));
-        final Resource resource = resources[0];
-        return resource.exists() ? Optional.ofNullable(mapToAttachment(resource)) : Optional.empty();
+    public Optional<Attachment> getById(final String id) {
+        return  Optional.empty();
     }
 
     private Attachment mapToAttachment(Resource resource) {
@@ -74,16 +38,10 @@ public class AttachmentService {
     }
 
     public void upload(byte[] file, String fileName) throws IOException {
-        Resource resource = this.resourceLoader.getResource(String.format("s3://%s/%s/%s", bucketName, UUID.randomUUID().toString(), fileName));
-        WritableResource writableResource = (WritableResource) resource;
-        try (OutputStream outputStream = writableResource.getOutputStream()) {
-            outputStream.write(file);
-        }
+        // TODO
     }
 
     public void delete(final String id) throws IOException {
-        getById(id).ifPresent(attachment -> {
-            amazonS3.deleteObject(new DeleteObjectRequest(bucketName, String.format("%s/%s", id, attachment.getFileName())));
-        });
+        // TODO
     }
 }
